@@ -4,7 +4,19 @@ import sqlite3
 LMS = sqlite3.connect('Library_Management_System.db')
 cursor = LMS.cursor()
 
-create_Borrower_sql = "CREATE TABLE BORROWER (Name VARCHAR(255) NOT NULL, Address VARCHAR(255) NOT NULL, Phone VARCHAR(20) NOT NULL)"
+create_Borrower_sql = "CREATE TABLE IF NOT EXISTS BORROWER (Name VARCHAR(255) NOT NULL, Address VARCHAR(255) NOT NULL, Phone VARCHAR(20) NOT NULL)"
+cursor.execute(create_Borrower_sql)
+create_Borrower_sql = "CREATE TABLE IF NOT EXISTS PUBLISHER ( Publisher_Name VARCHAR(255) PRIMARY KEY NOT NULL, Phone VARCHAR(20), Address VARCHAR(255))"
+cursor.execute(create_Borrower_sql)
+create_Borrower_sql = "CREATE TABLE IF NOT EXISTS LIBRARY_BRANCH ( Branch_Id INTEGER PRIMARY KEY, Branch_Name VARCHAR(255) NOT NULL, Branch_Address VARCHAR(255) NOT NULL)"
+cursor.execute(create_Borrower_sql)
+create_Borrower_sql = "CREATE TABLE IF NOT EXISTS BOOK ( Book_Id INTEGER PRIMARY KEY, Title VARCHAR(255) NOT NULL, Publisher_Name VARCHAR(255) NOT NULL, FOREIGN KEY (Publisher_Name) REFERENCES PUBLISHER(Publisher_Name))"
+cursor.execute(create_Borrower_sql)
+create_Borrower_sql = "CREATE TABLE IF NOT EXISTS BOOK_LOANS ( Book_Id INTEGER NOT NULL, Branch_Id INTEGER NOT NULL, Card_No INTEGER NOT NULL, Date_Out DATE NOT NULL, Due_Date DATE NOT NULL, Returned_date DATE, PRIMARY KEY (Book_Id, Branch_Id, Card_No), FOREIGN KEY (Book_Id) REFERENCES BOOK(Book_Id), FOREIGN KEY (Branch_Id) REFERENCES LIBRARY_BRANCH(Branch_Id), FOREIGN KEY (Card_No) REFERENCES BORROWER(Card_No) )"
+cursor.execute(create_Borrower_sql)
+create_Borrower_sql = "CREATE TABLE IF NOT EXISTS BOOK_COPIES ( Book_Id INTEGER NOT NULL, Branch_Id INTEGER NOT NULL, No_Of_Copies INTEGER NOT NULL, PRIMARY KEY (Book_Id, Branch_Id), FOREIGN KEY (Book_Id) REFERENCES BOOK(Book_Id), FOREIGN KEY (Branch_Id) REFERENCES LIBRARY_BRANCH(Branch_Id) )"
+cursor.execute(create_Borrower_sql)
+create_Borrower_sql = "CREATE TABLE IF NOT EXISTS BOOK_AUTHORS ( Book_Id INTEGER NOT NULL, Author_Name VARCHAR(255) NOT NULL, PRIMARY KEY (Book_Id, Author_Name), FOREIGN KEY (Book_Id) REFERENCES BOOK(Book_Id) )"
 cursor.execute(create_Borrower_sql)
 
 LMS.commit()
