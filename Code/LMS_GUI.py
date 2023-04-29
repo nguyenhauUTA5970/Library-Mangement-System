@@ -44,7 +44,7 @@ def checkout():
         cardno = 989899
         
         bq_cur.execute("insert into book_loans (book_id, branch_id, card_no, Date_out, Due_date, Returned_date, Late) values (?, ?, ?, date('now'), date('now', '+1 month'), NULL, 0)", (biq, brid, cardno, ))
-        bq_cur.execute("update book_copies set No_of_copies = No_of_copies where book_id = ?", (biq,))
+        bq_cur.execute("update book_copies set No_of_copies = No_of_copies where + 1 book_id = ?", (biq,))
 
         bq.commit()
 
