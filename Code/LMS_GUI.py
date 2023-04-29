@@ -1,7 +1,7 @@
 from tkinter import *
 import sqlite3
 
-LMS = sqlite3.connect('Library_Management_System.db')
+LMS = sqlite3.connect('proj2p3.db')
 cursor = LMS.cursor()
 
 create_Borrower_sql = "CREATE TABLE IF NOT EXISTS BORROWER (Card_no INT PRIMARY KEY, Name VARCHAR(255) NOT NULL, Address VARCHAR(255) NOT NULL, Phone VARCHAR(20) NOT NULL)"
@@ -108,6 +108,10 @@ B_Phone_Label.grid(row = 2, column = 0)
 #Submit Button
 submit_button = Button(root, text = 'Submit', command = submit)
 submit_button.grid(row = 3, column = 0, columnspan = 2, pady = 10, padx = 10)
+
+#checkout test Button
+Checkout_button = Button(root, text = 'Checkout', command = checkout)
+Checkout_button.grid(row = 4, column = 0, columnspan = 2, pady = 10, padx = 10)
 
 #Execute
 root.mainloop()
