@@ -2,19 +2,26 @@ from tkinter import *
 import sqlite3
 import random
 
+# Connecting with the database
 LMS = sqlite3.connect('Library_Management_System.db')
 
+# Creating the Main Menu
 root = Tk()
 root.title('Library Management System')
 root.geometry("400x400")
 
+# Function to generate random card number
 def generate_card_number():
     return random.randint(100000, 999999)
 
+# Function to checkout out a book
 def checkout_book():
+
+    # Creating a new window for the checkout function
     checkout_window = Toplevel(root)
     checkout_window.title('Checkout Book')
 
+    # Creating labels AND input fields
     book_id_label = Label(checkout_window, text = 'Book ID:')
     book_id_label.grid(row = 0, column = 0)
     book_id_input = Entry(checkout_window)
@@ -31,14 +38,14 @@ def checkout_book():
     card_no_input = Entry(checkout_window)
     card_no_input.grid(row = 2, column = 1)
 
-
+    # Function to handle the checkout button click
     def checkout():
         ck_cur = LMS.cursor()
-        ck_cur.execute("insert into book_loans (Book_Id, Branch_Id, Card_No, Date_Out, Due_Date, Returned_date) values (?, ?, ?, date('now'), date('now', '+1 month'), NULL)", (book_id_input.get(), branch_id_input.get(), card_no_input.get()))
-        ck_cur.execute("update book_copies set No_of_copies = No_of_copies - 1 where Book_Id = ? and Branch_Id = ?", (book_id_input.get(), branch_id_input.get()))
+        ck_cur.execute("INSERT INTO BOOK_LOANS (Book_Id, Branch_Id, Card_No, Date_Out, Due_Date, Returned_date) VALUES (?, ?, ?, date('now'), date('now', '+1 month'), NULL)", (book_id_input.get(), branch_id_input.get(), card_no_input.get()))
+        ck_cur.execute("UPDATE BOOK_COPIES set No_of_copies = No_of_copies - 1 WHERE Book_Id = ? AND Branch_Id = ?", (book_id_input.get(), branch_id_input.get()))
         LMS.commit()
 
-        ck_cur.execute("select No_of_copies from book_copies where Book_Id = ? and Branch_Id = ?", (book_id_input.get(), branch_id_input.get()))
+        ck_cur.execute("SELECT No_of_copies FROM BOOK_COPIES WHERE Book_Id = ? AND Branch_Id = ?", (book_id_input.get(), branch_id_input.get()))
         copy_num = ck_cur.fetchone()[0]
         copies_label = Label(checkout_window, text = 'Number of Copies Left: {}'.format(copy_num))
         copies_label.grid(row = 4, column = 0, columnspan = 2)
@@ -68,18 +75,18 @@ def add_borrower():
 
     def add_borrower_submit():
         br_cur = LMS.cursor()
-        br_cur.execute("insert into borrower (Name, Address, Phone) values (?, ?, ?)", (name_input.get(), address_input.get(), phone_input.get()))
+        br_cur.execute("INSERT INTO BORROWER (Name, Address, Phone) VALUES (?, ?, ?)", (name_input.get(), address_input.get(), phone_input.get()))
         LMS.commit()
 
         card_no = generate_card_number()
-        while br_cur.execute("select exists (select * from borrower where Card_No = ?)", (card_no,)).fetchone()[0]:
+        while br_cur.execute("SELECT EXISTS (SELECT * FROM BORROWER WHERE Card_No = ?)", (card_no,)).fetchone()[0]:
             card_no = generate_card_number()
 
 
         card_no_label = Label(add_borrower_window, text = 'Card Number: {}'.format(card_no))
         card_no_label.grid(row = 4, column = 0, columnspan = 2)
         
-        br_cur.execute("update borrower set Card_no = ? where Name = ? and Address = ? and Phone = ?", (card_no, name_input.get(), address_input.get(), phone_input.get()))
+        br_cur.execute("UPDATE BORROWER set Card_no = ? WHERE Name = ? AND Address = ? AND Phone = ?", (card_no, name_input.get(), address_input.get(), phone_input.get()))
         LMS.commit()
 
     add_borrower_button = Button(add_borrower_window, text = 'Add Borrower', command = add_borrower_submit)
@@ -110,7 +117,7 @@ def add_book():
         ab_cur = LMS.cursor()
 
         publisher_name = publisher_input.get()
-        ab_cur.execute("select * from publisher where Publisher_Name = ?", (publisher_name,))
+        ab_cur.execute("SELECT * FROM PUBLISHER WHERE Publisher_Name = ?", (publisher_name,))
 
         publisher_row = ab_cur.fetchone()
 
@@ -119,21 +126,21 @@ def add_book():
 
         book_title = book_title_input.get()
         publisher_name = publisher_input.get()
-        ab_cur.execute("insert into book (Title, Publisher_Name) values (?, ?)", (book_title, publisher_name))
+        ab_cur.execute("INSERT INTO BOOK (Title, Publisher_Name) VALUES (?, ?)", (book_title, publisher_name))
         book_id = ab_cur.lastrowid
 
 
-        # insert author into BOOK_AUTHORS table
+        # INSERT author INTO BOOK_AUTHORS table
         author_name = author_input.get()
-        ab_cur.execute("insert into book_authors (Book_Id, Author_Name) values (?, ?)", (book_id, author_name))
+        ab_cur.execute("INSERT INTO BOOK_AUTHORS (Book_Id, Author_Name) VALUES (?, ?)", (book_id, author_name))
 
-        # insert copies into BOOK_COPIES table for all branches
-        ab_cur.execute("select * from library_branch")
+        # INSERT copies INTO BOOK_COPIES table for all branches
+        ab_cur.execute("SELECT * FROM LIBRARY_BRANCH")
         branches = ab_cur.fetchall()
 
         for branch in branches:
             branch_id = branch[0]
-            ab_cur.execute("insert into book_copies (Book_Id, Branch_Id, No_Of_Copies) values (?, ?, ?)", (book_id, branch_id, 5))
+            ab_cur.execute("INSERT INTO BOOK_COPIES (Book_Id, Branch_Id, No_Of_Copies) VALUES (?, ?, ?)", (book_id, branch_id, 5))
 
         LMS.commit()
 
@@ -156,7 +163,7 @@ def get_copies_loaned():
         cl_cur = LMS.cursor()
 
         book_title = book_title_input.get()
-        cl_cur.execute("select library_branch.Branch_Id, library_branch.Branch_Name, COUNT(book_loans.Book_Id) as Copies_Loaned_Out from book_loans join library_branch on book_loans.Branch_Id = library_branch.Branch_Id where book_loans.Book_Id in (select Book_Id from book where Title = ?) group by library_branch.Branch_Id", (book_title,))
+        cl_cur.execute("SELECT LIBRARY_BRANCH.Branch_Id, LIBRARY_BRANCH.Branch_Name, COUNT(BOOK_LOANS.Book_Id) as Copies_Loaned_Out FROM BOOK_LOANS JOIN LIBRARY_BRANCH on BOOK_LOANS.Branch_Id = LIBRARY_BRANCH.Branch_Id WHERE BOOK_LOANS.Book_Id in (SELECT Book_Id FROM BOOK WHERE Title = ?) group by LIBRARY_BRANCH.Branch_Id", (book_title,))
         results = cl_cur.fetchall()
 
         # create a new window to display results
