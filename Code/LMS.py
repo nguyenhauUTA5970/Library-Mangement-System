@@ -181,6 +181,7 @@ def get_copies_loaned():
     get_loan_button = Button(add_book_window, text = 'Get Copies Loaned', command = get_copies_submit)
     get_loan_button.grid(row = 3, column = 0, columnspan = 2)
 
+#Need to implement adding results from fetchall().
 def get_late_book_loans():
     add_late_copy_window = Toplevel(root)
     add_late_copy_window.title("Listing late book loans")
@@ -204,21 +205,24 @@ def get_late_book_loans():
         # SELECT bl.Book_id, bl.Branch_ID, bl.Card_No, bl.Date_Out, bl.Due_Date, bl.Returned_Date, julianday(bl.Date_Out)-julianday(bl.due_date) as late_days 
         # FROM book_loans bl 
         # WHERE bl.date_out > bl.due_date AND bl.due_date BETWEEN due_Date AND due_Date
-
         bl_cur.execute("SELECT bl.Book_id, bl.Branch_ID, bl.Card_No, bl.Date_Out, bl.Due_Date, bl.Returned_Date, julianday(bl.Date_Out)-julianday(bl.due_date) as late_days FROM book_loans bl  WHERE bl.date_out > bl.due_date AND bl.due_date BETWEEN ? AND ?", (loan_date, due_date))   
         res = bl_cur.fetchall()
 
         bl_result_window = Toplevel(root)
         bl_result_window.title('Late Book Loans')
         bl_result_window.geometry("640x480")
-
+ 
         #for row in res:
             
 
     search_late_copies_button = Button(add_late_copy_window, text = 'List Books', command = lbl_submit)
     search_late_copies_button.grid(row = 2, column = 0, columnspan = 2)
 
-
+#Need to implement filtering
+#Need to add book_id, book title, part of book title.
+#Need to add late fee amount being in USD $0.00 format
+#Replace NULL Values with Non-Applicable.
+#Order results based on highest late fee remaining if no filtering.
 def select_view():
     select_view_window = Toplevel(root)
     select_view_window.title("Viewing Book Loans")
