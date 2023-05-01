@@ -212,16 +212,8 @@ def get_late_book_loans():
         bl_result_window.title('Late Book Loans')
         bl_result_window.geometry("640x480")
 
-        for row in res:
-            bl_book_id = row[0]
-            bl_branch_id = row[1]
-            bl_Card_No = row[2]
-            bl_Date_Out = row[3]
-            bl_Due_Date = row[4]
-            bl_Returned_Date = row[5]
-            bl_days_late = row[6]
-            bl_result_label = Label(bl_result_window, text = "Book ID: {Book_id}, Branch ID: {Branch_id}, Card ID: {Card_no}, Date Out: {Date_out}, Due Date: {Due_date}, Returned_date: {Returned_date}, Late Days: {late_days}")
-            bl_result_label.pack()
+        #for row in res:
+            
 
     search_late_copies_button = Button(add_late_copy_window, text = 'List Books', command = lbl_submit)
     search_late_copies_button.grid(row = 2, column = 0, columnspan = 2)
@@ -266,8 +258,6 @@ def select_view():
     
     tree.pack()
     select_view_window.mainloop()
-
-    
 
 add_book_button = Button(root, text = 'Add Book', command = add_book)
 add_book_button.pack()
