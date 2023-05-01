@@ -180,6 +180,53 @@ def get_copies_loaned():
     get_loan_button = Button(add_book_window, text = 'Get Copies Loaned', command = get_copies_submit)
     get_loan_button.grid(row = 3, column = 0, columnspan = 2)
 
+#Req 5
+def get_late_book_loans():
+    add_late_copy_window = Toplevel(root)
+    add_late_copy_window.title("Listing late book loans")
+    add_late_copy_window.geometry("300x300")
+
+    loan_date_label = Label(add_late_copy_window, text = 'Loan Date (YYYY-MM-DD):')
+    loan_date_label.grid(row = 0, column = 0)
+    loan_date_input = Entry(add_late_copy_window)
+    loan_date_input.grid(row = 0, column = 1)
+
+    due_date_label = Label(add_late_copy_window, text = 'Due Date (YYYY-MM-DD):')
+    due_date_label.grid(row = 1, column = 0)
+    due_date_input = Entry(add_late_copy_window)
+    due_date_input.grid(row = 1, column = 1)
+  
+    def lbl_submit():
+        bl_cur = LMS.cursor()
+        loan_date = loan_date_input.get()
+        due_date = due_date_input.get()
+
+        # SELECT bl.Book_id, bl.Branch_ID, bl.Card_No, bl.Date_Out, bl.Due_Date, bl.Returned_Date, julianday(bl.Date_Out)-julianday(bl.due_date) as late_days 
+        # FROM book_loans bl 
+        # WHERE bl.date_out > bl.due_date AND bl.due_date BETWEEN due_Date AND due_Date
+
+        bl_cur.execute("SELECT bl.Book_id, bl.Branch_ID, bl.Card_No, bl.Date_Out, bl.Due_Date, bl.Returned_Date, julianday(bl.Date_Out)-julianday(bl.due_date) as late_days FROM book_loans bl  WHERE bl.date_out > bl.due_date AND bl.due_date BETWEEN ? AND ?", (loan_date, due_date))   
+        res = bl_cur.fetchall()
+
+        bl_result_window = Toplevel(root)
+        bl_result_window.title('Late Book Loans')
+        bl_result_window.geometry("640x480")
+
+        for res in res:
+            bl_book_id = res[0]
+            bl_branch_id = res[1]
+            bl_Card_No = res[2]
+            bl_Date_Out = res[3]
+            bl_Due_Date = res[4]
+            bl_Returned_Date = res[5]
+            bl_days_late = res[6]
+            bl_result_label = Label(bl_result_window, text = "Book ID: {Book_id}, Branch ID: {Branch_id}, Card ID: {Card_no}, Date Out: {Date_out}, Due Date: {Due_date}, Returned_date: {Returned_date}, Late Days: {late_days}")
+            bl_result_label.pack()
+
+    search_late_copies_button = Button(add_late_copy_window, text = 'List Books', command = lbl_submit)
+    search_late_copies_button.grid(row = 2, column = 0, columnspan = 2)
+
+
 
 
 add_book_button = Button(root, text = 'Add Book', command = add_book)
@@ -193,5 +240,8 @@ checkout_button.pack()
 
 get_copies_button = Button(root, text = "Get Copies Loaned", command=get_copies_loaned)
 get_copies_button.pack()
+
+list_late_copies_button = Button(root, text = 'List Late Copies', command = get_late_book_loans)
+list_late_copies_button.pack()
 
 root.mainloop()
