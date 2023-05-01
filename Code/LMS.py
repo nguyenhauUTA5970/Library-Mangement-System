@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter.ttk import *
 import sqlite3
 import random
 
@@ -180,7 +181,6 @@ def get_copies_loaned():
     get_loan_button = Button(add_book_window, text = 'Get Copies Loaned', command = get_copies_submit)
     get_loan_button.grid(row = 3, column = 0, columnspan = 2)
 
-#Req 5
 def get_late_book_loans():
     add_late_copy_window = Toplevel(root)
     add_late_copy_window.title("Listing late book loans")
@@ -212,14 +212,14 @@ def get_late_book_loans():
         bl_result_window.title('Late Book Loans')
         bl_result_window.geometry("640x480")
 
-        for res in res:
-            bl_book_id = res[0]
-            bl_branch_id = res[1]
-            bl_Card_No = res[2]
-            bl_Date_Out = res[3]
-            bl_Due_Date = res[4]
-            bl_Returned_Date = res[5]
-            bl_days_late = res[6]
+        for row in res:
+            bl_book_id = row[0]
+            bl_branch_id = row[1]
+            bl_Card_No = row[2]
+            bl_Date_Out = row[3]
+            bl_Due_Date = row[4]
+            bl_Returned_Date = row[5]
+            bl_days_late = row[6]
             bl_result_label = Label(bl_result_window, text = "Book ID: {Book_id}, Branch ID: {Branch_id}, Card ID: {Card_no}, Date Out: {Date_out}, Due Date: {Due_date}, Returned_date: {Returned_date}, Late Days: {late_days}")
             bl_result_label.pack()
 
@@ -227,7 +227,47 @@ def get_late_book_loans():
     search_late_copies_button.grid(row = 2, column = 0, columnspan = 2)
 
 
+def select_view():
+    select_view_window = Toplevel(root)
+    select_view_window.title("Viewing Book Loans")
+    select_view_window.geometry("1280x720")
 
+    view_cur = LMS.cursor()
+    view_cur.execute("SELECT * FROM vBookLoanInfo")
+    res = view_cur.fetchall()
+
+    tree = Treeview(select_view_window, height = 25)
+    tree['columns'] = ('Card No.', 'Name', 'Date Out', 'Due Date', 'Returned Date', 'Total Days', 'Title', 'Days Late', 'Branch Id', 'Late Fee Balance')
+    tree.heading('#0', text='')
+    tree.column('#0', width=50)
+    tree.heading('Card No.', text='Card No.')
+    tree.column('Card No.', width=80)
+    tree.heading('Name', text='Name')
+    tree.column('Name', width=100)
+    tree.heading('Date Out', text='Date Out')
+    tree.column('Date Out', width=100)
+    tree.heading('Due Date', text='Due Date')
+    tree.column('Due Date', width=100)
+    tree.heading('Returned Date', text='Returned Date')
+    tree.column('Returned Date', width=100)
+    tree.heading('Total Days', text='Total Days')
+    tree.column('Total Days', width=80)
+    tree.heading('Title', text='Title')
+    tree.column('Title', width=200)
+    tree.heading('Days Late', text='Days Late')
+    tree.column('Days Late', width=80)
+    tree.heading('Branch Id', text='Branch Id')
+    tree.column('Branch Id', width=80)
+    tree.heading('Late Fee Balance', text='Late Fee Balance')
+    tree.column('Late Fee Balance', width=120)
+
+    for row in res:
+        tree.insert('','end',values = row)
+    
+    tree.pack()
+    select_view_window.mainloop()
+
+    
 
 add_book_button = Button(root, text = 'Add Book', command = add_book)
 add_book_button.pack()
@@ -243,5 +283,8 @@ get_copies_button.pack()
 
 list_late_copies_button = Button(root, text = 'List Late Copies', command = get_late_book_loans)
 list_late_copies_button.pack()
+
+select_view_button = Button(root, text = 'View Book Loans', command = select_view)
+select_view_button.pack()
 
 root.mainloop()
