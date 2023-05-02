@@ -4,7 +4,7 @@ import sqlite3
 import random
 
 # Connecting with the database
-LMS = sqlite3.connect('Library_Management_System.db')
+LMS = sqlite3.connect('proj2p3.db')
 
 # Creating the Main Menu
 root = Tk()
@@ -204,14 +204,40 @@ def get_late_book_loans():
 
         # SELECT bl.Book_id, bl.Branch_ID, bl.Card_No, bl.Date_Out, bl.Due_Date, bl.Returned_Date, julianday(bl.Date_Out)-julianday(bl.due_date) as late_days 
         # FROM book_loans bl 
-        # WHERE bl.date_out > bl.due_date AND bl.due_date BETWEEN due_Date AND due_Date
-        bl_cur.execute("SELECT bl.Book_id, bl.Branch_ID, bl.Card_No, bl.Date_Out, bl.Due_Date, bl.Returned_Date, julianday(bl.Date_Out)-julianday(bl.due_date) as late_days FROM book_loans bl  WHERE bl.date_out > bl.due_date AND bl.due_date BETWEEN ? AND ?", (loan_date, due_date))   
+        # WHERE Late = 1 AND bl.due_date BETWEEN due_Date AND due_Date
+        bl_cur.execute("SELECT bl.Book_id, bl.Branch_ID, bl.Card_No, bl.Date_Out, bl.Due_Date, bl.Returned_Date, CASE WHEN bl.Late = 0 THEN 0 ELSE julianday(bl.Returned_date) - julianday(bl.Due_Date) END AS Days_Late FROM Book_Loans bl  WHERE Late = 1 AND bl.due_date BETWEEN ? AND ?", (loan_date, due_date))   
         res = bl_cur.fetchall()
 
         bl_result_window = Toplevel(root)
         bl_result_window.title('Late Book Loans')
         bl_result_window.geometry("640x480")
+
+        tree = Treeview(bl_result_window, height=25)
+        tree['columns'] = ('Book ID', 'Branch ID', 'Card No.', 'Date Out', 'Due Date', 'Returned Date', 'Days Late')
+        tree.heading('#0', text='')
+        tree.column('#0', width=0)
+        tree.heading('Book ID', text='Book ID')
+        tree.column('Book ID', width=80)
+        tree.heading('Branch ID', text='Branch ID')
+        tree.column('Branch ID', width=80)
+        tree.heading('Card No.', text='Card No.')
+        tree.column('Card No.', width=80)
+        tree.heading('Date Out', text='Date Out')
+        tree.column('Date Out', width=100)
+        tree.heading('Due Date', text='Due Date')
+        tree.column('Due Date', width=100)
+        tree.heading('Returned Date', text='Returned Date')
+        tree.column('Returned Date', width=100)
+        tree.heading('Days Late', text='Days Late')
+        tree.column('Days Late', width=80)
+
+        for result in res:
+            values = result
+            tree.insert('', 'end', values=values)
+
+        tree.pack()
             
+
     search_late_copies_button = Button(add_late_copy_window, text = 'List Books', command = lbl_submit)
     search_late_copies_button.grid(row = 2, column = 0, columnspan = 2)
 
@@ -260,7 +286,12 @@ def select_view():
     tree.pack()
 
     for row in res:
-        tree.insert('','end',values = row)
+        late_fee = row[9]
+        values = row[0:9] + (f'${late_fee:.2f}',)
+        tree.insert('', 'end', values=values)
+    
+    tree.pack()
+
 
     def update_treeview():
         search_term = search_var.get()
