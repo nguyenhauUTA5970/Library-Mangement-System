@@ -250,7 +250,7 @@ def get_late_book_loans():
         tree.heading('Branch ID', text='Branch ID')
         tree.column('Branch ID', width=80)
         tree.heading('Card No.', text='Card No.')
-        tree.column('Card No.', width=80)
+        tree.column('Card No.', width=80) 
         tree.heading('Date Out', text='Date Out')
         tree.column('Date Out', width=100)
         tree.heading('Due Date', text='Due Date')
@@ -273,7 +273,7 @@ def get_late_book_loans():
 def select_view():
     select_view_window = Toplevel(root)
     select_view_window.title("Viewing Book Loans")
-    select_view_window.geometry("1280x720")
+    select_view_window.geometry("600x600")
 
     view_cur = LMS.cursor()
     view_cur.execute("SELECT Card_No, Name, LateFeeBalance FROM vBookLoanInfo")
@@ -328,7 +328,7 @@ def select_view():
 def bookloansview():
     select_view_window = Toplevel(root)
     select_view_window.title("Viewing Book Loans")
-    select_view_window.geometry("1280x720")
+    select_view_window.geometry("800x600")
 
     view_cur = LMS.cursor()
     view_cur.execute("SELECT Title, Date_Out, Due_Date, Returned_date, LateFeeBalance FROM vBookLoanInfo")
