@@ -9,7 +9,7 @@ LMS = sqlite3.connect('Library_Management_System.db')
 # Creating the Main Menu
 root = Tk()
 root.title('Library Management System')
-root.geometry("400x400")
+root.geometry("200x200")
 
 # Function to generate random card number
 def generate_card_number():
@@ -21,6 +21,7 @@ def checkout_book():
     # Creating a new window for the checkout function
     checkout_window = Toplevel(root)
     checkout_window.title('Checkout Book')
+    checkout_window.geometry("300x150")
 
     # Creating labels AND input fields
     book_id_label = Label(checkout_window, text = 'Book ID:')
@@ -57,6 +58,7 @@ def checkout_book():
 def add_borrower():
     add_borrower_window = Toplevel(root)
     add_borrower_window.title('Add Borrower')
+    add_borrower_window.geometry('300x150')
 
     name_label = Label(add_borrower_window, text = 'Name:')
     name_label.grid(row = 0, column = 0)
@@ -96,7 +98,7 @@ def add_borrower():
 def add_book():
     add_book_window = Toplevel(root)
     add_book_window.title('Add Book')
-    add_book_window.geometry('300x200')
+    add_book_window.geometry('300x150')
 
     book_title_label = Label(add_book_window, text = 'Title:')
     book_title_label.grid(row = 0, column = 0)
@@ -153,7 +155,7 @@ def add_book():
 def get_copies_loaned():
     add_book_window = Toplevel(root)
     add_book_window.title('Show Copies')
-    add_book_window.geometry('400x400')
+    add_book_window.geometry('400x100')
 
     book_title_label = Label(add_book_window, text = 'Book Title:')
     book_title_label.grid(row = 0, column = 0)
@@ -170,13 +172,25 @@ def get_copies_loaned():
         # create a new window to display results
         results_window = Toplevel(root)
         results_window.title('Results')
-        results_window.geometry("400x400")
+        results_window.geometry("550x400")
 
         # create a label to display the results
-        results_label = Label(results_window, text = "Copies Loaned Out per Branch for " + book_title + ":\n\nBranch ID\tBranch Name\tCopies Loaned Out\n")
+        # create a treeview to display the results
+        tree = Treeview(results_window)
+        tree['columns'] = ('Branch ID', 'Branch Name', 'Copies Loaned Out')
+        tree.column('#0', width=0, stretch=NO)
+        tree.column('Branch ID', anchor=CENTER, width=100)
+        tree.column('Branch Name', anchor=CENTER, width=300)
+        tree.column('Copies Loaned Out', anchor=CENTER, width=150)
+        tree.heading('#0', text='', anchor=CENTER)
+        tree.heading('Branch ID', text='Branch ID', anchor=CENTER)
+        tree.heading('Branch Name', text='Branch Name', anchor=W)
+        tree.heading('Copies Loaned Out', text='Copies Loaned Out', anchor=E)
+        tree.grid(row=0, column=0, sticky=NSEW)
+
+        # insert the results into the treeview
         for result in results:
-            results_label["text"] += str(result[0]) + "\t\t" + result[1] + "\t\t" + str(result[2]) + "\n"
-        results_label.pack()
+            tree.insert('', 'end', values=result)
 
     get_loan_button = Button(add_book_window, text = 'Get Copies Loaned', command = get_copies_submit)
     get_loan_button.grid(row = 3, column = 0, columnspan = 2)
@@ -185,7 +199,7 @@ def get_copies_loaned():
 def get_late_book_loans():
     add_late_copy_window = Toplevel(root)
     add_late_copy_window.title("Listing late book loans")
-    add_late_copy_window.geometry("300x300")
+    add_late_copy_window.geometry("400x150")
 
     loan_date_label = Label(add_late_copy_window, text = 'Loan Date (YYYY-MM-DD):')
     loan_date_label.grid(row = 0, column = 0)
@@ -213,6 +227,10 @@ def get_late_book_loans():
         bl_result_window.geometry("640x480")
  
         #for row in res:
+        results_label = Label(results_window, text="Late Book Loans:\n\nBook ID\tBranch ID\tCard No\tDate Out\tDue Date\tReturned Date\tDays Late\n")
+        for result in results:
+            results_label["text"] += "{:<10}{:<10}{:<10}{:<15}{:<15}{:<20}{:<10}\n".format(result[0], result[1], result[2], result[3], result[4], result[5], result[6])
+        results_label.pack()
             
 
     search_late_copies_button = Button(add_late_copy_window, text = 'List Books', command = lbl_submit)
