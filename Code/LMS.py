@@ -211,10 +211,7 @@ def get_late_book_loans():
         bl_result_window = Toplevel(root)
         bl_result_window.title('Late Book Loans')
         bl_result_window.geometry("640x480")
- 
-        #for row in res:
             
-
     search_late_copies_button = Button(add_late_copy_window, text = 'List Books', command = lbl_submit)
     search_late_copies_button.grid(row = 2, column = 0, columnspan = 2)
 
@@ -231,6 +228,10 @@ def select_view():
     view_cur = LMS.cursor()
     view_cur.execute("SELECT * FROM vBookLoanInfo")
     res = view_cur.fetchall()
+
+    search_var = StringVar()
+    search_bar = Entry(select_view_window, textvariable = search_var, width = 50)
+    search_bar.pack()
 
     tree = Treeview(select_view_window, height = 25)
     tree['columns'] = ('Card No.', 'Name', 'Date Out', 'Due Date', 'Returned Date', 'Total Days', 'Title', 'Days Late', 'Branch Id', 'Late Fee Balance')
@@ -256,11 +257,29 @@ def select_view():
     tree.column('Branch Id', width=80)
     tree.heading('Late Fee Balance', text='Late Fee Balance')
     tree.column('Late Fee Balance', width=120)
+    tree.pack()
 
     for row in res:
         tree.insert('','end',values = row)
-    
-    tree.pack()
+
+    def update_treeview():
+        search_term = search_var.get()
+        if search_term:
+            view_cur.execute("SELECT * FROM vBookLoanInfo WHERE Card_No LIKE ? OR Name LIKE ?", ('%' + search_term + '%', '%' + search_term + '%'))
+            res = view_cur.fetchall()
+        else:
+            view_cur.execute("SELECT * FROM vBookLoanInfo ORDER BY LateFeeBalance DESC")
+            res = view_cur.fetchall()
+
+        for item in tree.get_children():
+            tree.delete(item)
+
+        for row in res:
+            tree.insert('','end',values = row)
+
+    update_tree_button = Button(select_view_window, text = 'Update Tree')
+    update_tree_button.pack(pady = 10)
+    update_tree_button.config(command = update_treeview)
     select_view_window.mainloop()
 
 add_book_button = Button(root, text = 'Add Book', command = add_book)
