@@ -4,12 +4,12 @@ import sqlite3
 import random
 
 # Connecting with the database
-LMS = sqlite3.connect('proj2p3.db')
+LMS = sqlite3.connect('Library_Management_System.db')
 
 # Creating the Main Menu
 root = Tk()
 root.title('Library Management System')
-root.geometry("400x400")
+root.geometry("350x350")
 
 # Function to generate random card number
 def generate_card_number():
@@ -103,19 +103,21 @@ def add_borrower():
 
     def add_borrower_submit():
         br_cur = LMS.cursor()
-        br_cur.execute("INSERT INTO BORROWER (Name, Address, Phone) VALUES (?, ?, ?)", (name_input.get(), address_input.get(), phone_input.get()))
-        LMS.commit()
 
         card_no = generate_card_number()
         while br_cur.execute("SELECT EXISTS (SELECT * FROM BORROWER WHERE Card_No = ?)", (card_no,)).fetchone()[0]:
             card_no = generate_card_number()
 
 
+        br_cur.execute("INSERT INTO BORROWER (Card_no, Name, Address, Phone) VALUES (?, ?, ?, ?)", (card_no, name_input.get(), address_input.get(), phone_input.get()))
+        LMS.commit()
+
+
         card_no_label = Label(add_borrower_window, text = 'Card Number: {}'.format(card_no))
         card_no_label.grid(row = 4, column = 0, columnspan = 2)
         
-        br_cur.execute("UPDATE BORROWER set Card_no = ? WHERE Name = ? AND Address = ? AND Phone = ?", (card_no, name_input.get(), address_input.get(), phone_input.get()))
-        LMS.commit()
+       # br_cur.execute("UPDATE BORROWER set Card_no = ? WHERE Name = ? AND Address = ? AND Phone = ?", (card_no, name_input.get(), address_input.get(), phone_input.get()))
+        #LMS.commit()
 
     add_borrower_button = Button(add_borrower_window, text = 'Add Borrower', command = add_borrower_submit)
     add_borrower_button.grid(row = 3, column = 0, columnspan = 2)
@@ -383,24 +385,24 @@ def bookloansview():
     select_view_window.mainloop()
 
 add_book_button = Button(root, text = 'Add Book', command = add_book)
-add_book_button.pack()
+add_book_button.pack(pady=10)
 
 add_borrower_button = Button(root, text = 'Add Borrower', command = add_borrower)
-add_borrower_button.pack()
+add_borrower_button.pack(pady=10)
 
 checkout_button = Button(root, text = 'Checkout Book', command = checkout_book)
-checkout_button.pack()
+checkout_button.pack(pady=10)
 
 get_copies_button = Button(root, text = "Get Copies Loaned", command=get_copies_loaned)
-get_copies_button.pack()
+get_copies_button.pack(pady=10)
 
 list_late_copies_button = Button(root, text = 'List Late Copies', command = get_late_book_loans)
-list_late_copies_button.pack()
+list_late_copies_button.pack(pady=10)
 
 select_view_button = Button(root, text = 'View Borrowers', command = select_view)
-select_view_button.pack()
+select_view_button.pack(pady=10)
 
 select_view_button = Button(root, text = 'View Book Loans', command = bookloansview)
-select_view_button.pack()
+select_view_button.pack(pady=10)
 
 root.mainloop()
