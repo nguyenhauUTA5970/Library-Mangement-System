@@ -265,7 +265,7 @@ def select_view():
     def update_treeview():
         search_term = search_var.get()
         if search_term:
-            view_cur.execute("SELECT * FROM vBookLoanInfo WHERE Card_No LIKE ? OR Name LIKE ?", ('%' + search_term + '%', '%' + search_term + '%'))
+            view_cur.execute("SELECT * FROM vBookLoanInfo WHERE Card_No LIKE ? OR Name LIKE ? OR Title LIKE ?", ('%' + search_term + '%', '%' + search_term + '%', '%' + search_term + '%'))
             res = view_cur.fetchall()
         else:
             view_cur.execute("SELECT * FROM vBookLoanInfo ORDER BY LateFeeBalance DESC")
