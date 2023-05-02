@@ -241,11 +241,6 @@ def get_late_book_loans():
     search_late_copies_button = Button(add_late_copy_window, text = 'List Books', command = lbl_submit)
     search_late_copies_button.grid(row = 2, column = 0, columnspan = 2)
 
-#Need to implement filtering
-#Need to add book_id, book title, part of book title.
-#Need to add late fee amount being in USD $0.00 format
-#Replace NULL Values with Non-Applicable.
-#Order results based on highest late fee remaining if no filtering.
 def select_view():
     select_view_window = Toplevel(root)
     select_view_window.title("Viewing Book Loans")
@@ -296,7 +291,7 @@ def select_view():
     def update_treeview():
         search_term = search_var.get()
         if search_term:
-            view_cur.execute("SELECT * FROM vBookLoanInfo WHERE Card_No LIKE ? OR Name LIKE ? OR Title LIKE ?", ('%' + search_term + '%', '%' + search_term + '%', '%' + search_term + '%'))
+            view_cur.execute("SELECT * FROM vBookLoanInfo WHERE (Card_No LIKE '______' AND Card_No LIKE ?) OR Name LIKE ? OR Title LIKE ?", ('%' + search_term + '%', '%' + search_term + '%', '%' + search_term + '%'))
             res = view_cur.fetchall()
         else:
             view_cur.execute("SELECT * FROM vBookLoanInfo ORDER BY LateFeeBalance DESC")
