@@ -17,6 +17,7 @@ def generate_card_number():
 
 # Function to checkout out a book
 def checkout_book():
+    bq_cur = LMS.cursor()
 
     # Creating a new window for the checkout function
     checkout_window = Toplevel(root)
@@ -25,14 +26,27 @@ def checkout_book():
     # Creating labels AND input fields
     book_id_label = Label(checkout_window, text = 'Book ID:')
     book_id_label.grid(row = 0, column = 0)
-    book_id_input = Entry(checkout_window)
-    book_id_input.grid(row = 0, column = 1)
+    bq_cur.execute("SELECT book_id, title FROM book")
+    records = bq_cur.fetchall()
+    book_dict = {record[1]: record[0] for record in records}
+    titles = [record[1] for record in records]
+    clicked = StringVar()
+    clicked.set(titles[0])  # set the default value of the dropdown to the first book title
+    book_id_input = OptionMenu(checkout_window, clicked, *titles)
+    book_id_input.grid(row=0, column=1)
 
 
     branch_id_label = Label(checkout_window, text = 'Branch ID')
     branch_id_label.grid(row = 1, column = 0)
-    branch_id_input = Entry(checkout_window)
+    bq_cur.execute("SELECT branch_id, branch_name FROM library_branch")
+    records2 = bq_cur.fetchall()
+    branch_dict = {record2[1]: record2[0] for record2 in records2}
+    titles2 = [record2[1] for record2 in records2]
+    clicked2 = StringVar()
+    clicked2.set(titles2[0])  # set the default value of the dropdown to the first book title
+    branch_id_input = OptionMenu(checkout_window, clicked2, *titles2)
     branch_id_input.grid(row = 1, column = 1)
+
 
     card_no_label = Label(checkout_window, text = 'Card Number:')
     card_no_label.grid(row = 2, column = 0)
@@ -41,15 +55,28 @@ def checkout_book():
 
     # Function to handle the checkout button click
     def checkout():
+        book_id = book_dict.get(clicked.get())
+        branch_id = branch_dict.get(clicked2.get())
+        print(branch_id)
+        card_no_input.get()
+        card_no_input.get()
         ck_cur = LMS.cursor()
-        ck_cur.execute("INSERT INTO BOOK_LOANS (Book_Id, Branch_Id, Card_No, Date_Out, Due_Date, Returned_date) VALUES (?, ?, ?, date('now'), date('now', '+1 month'), NULL)", (book_id_input.get(), branch_id_input.get(), card_no_input.get()))
-        ck_cur.execute("UPDATE BOOK_COPIES set No_of_copies = No_of_copies - 1 WHERE Book_Id = ? AND Branch_Id = ?", (book_id_input.get(), branch_id_input.get()))
-        LMS.commit()
+        ck_cur.execute("INSERT INTO BOOK_LOANS (Book_Id, Branch_Id, Card_No, Date_Out, Due_Date, Returned_date, Late) VALUES (?, ?, ?, date('now'), date('now', '+1 month'), NULL, 0)", (book_id, branch_id, card_no_input.get()))
+        ck_cur.execute("UPDATE BOOK_COPIES set No_of_copies = No_of_copies - 1 WHERE Book_Id = ? AND Branch_Id = ?", (book_id, branch_id))
 
-        ck_cur.execute("SELECT No_of_copies FROM BOOK_COPIES WHERE Book_Id = ? AND Branch_Id = ?", (book_id_input.get(), branch_id_input.get()))
-        copy_num = ck_cur.fetchone()[0]
-        copies_label = Label(checkout_window, text = 'Number of Copies Left: {}'.format(copy_num))
-        copies_label.grid(row = 4, column = 0, columnspan = 2)
+        try:
+            ck_cur.execute("SELECT No_of_copies FROM BOOK_COPIES WHERE Book_Id = ? AND Branch_Id = ?", (book_id, branch_id))
+            copy_num = ck_cur.fetchone()[0]
+            copies_label = Label(checkout_window, text = 'Number of Copies Left: {}'.format(copy_num))
+            copies_label.grid(row = 4, column = 0, columnspan = 2)
+        except:
+            copies_label = Label(checkout_window, text = 'Book Not available')
+            copies_label.grid(row = 4, column = 0, columnspan = 2)
+            LMS.rollback()
+            LMS.rollback()
+
+        
+        LMS.commit()
 
     checkout_button = Button(checkout_window, text = 'Checkout', command = checkout)
     checkout_button.grid(row = 3, column = 0, columnspan = 2)
@@ -247,7 +274,7 @@ def select_view():
     select_view_window.geometry("1280x720")
 
     view_cur = LMS.cursor()
-    view_cur.execute("SELECT * FROM vBookLoanInfo")
+    view_cur.execute("SELECT Card_No, Name, LateFeeBalance FROM vBookLoanInfo")
     res = view_cur.fetchall()
 
     search_var = StringVar()
@@ -255,34 +282,20 @@ def select_view():
     search_bar.pack()
 
     tree = Treeview(select_view_window, height = 25)
-    tree['columns'] = ('Card No.', 'Name', 'Date Out', 'Due Date', 'Returned Date', 'Total Days', 'Title', 'Days Late', 'Branch Id', 'Late Fee Balance')
+    tree['columns'] = ('Card No.', 'Name', 'Late Fee Balance')
     tree.heading('#0', text='')
     tree.column('#0', width=50)
     tree.heading('Card No.', text='Card No.')
     tree.column('Card No.', width=80)
     tree.heading('Name', text='Name')
     tree.column('Name', width=100)
-    tree.heading('Date Out', text='Date Out')
-    tree.column('Date Out', width=100)
-    tree.heading('Due Date', text='Due Date')
-    tree.column('Due Date', width=100)
-    tree.heading('Returned Date', text='Returned Date')
-    tree.column('Returned Date', width=100)
-    tree.heading('Total Days', text='Total Days')
-    tree.column('Total Days', width=80)
-    tree.heading('Title', text='Title')
-    tree.column('Title', width=200)
-    tree.heading('Days Late', text='Days Late')
-    tree.column('Days Late', width=80)
-    tree.heading('Branch Id', text='Branch Id')
-    tree.column('Branch Id', width=80)
     tree.heading('Late Fee Balance', text='Late Fee Balance')
     tree.column('Late Fee Balance', width=120)
     tree.pack()
 
     for row in res:
-        late_fee = row[9]
-        values = row[0:9] + (f'${late_fee:.2f}',)
+        late_fee = row[2]
+        values = row[0:2] + (f'${late_fee:.2f}',)
         tree.insert('', 'end', values=values)
     
     tree.pack()
@@ -291,17 +304,78 @@ def select_view():
     def update_treeview():
         search_term = search_var.get()
         if search_term:
-            view_cur.execute("SELECT * FROM vBookLoanInfo WHERE (Card_No LIKE '______' AND Card_No LIKE ?) OR Name LIKE ? OR Title LIKE ?", ('%' + search_term + '%', '%' + search_term + '%', '%' + search_term + '%'))
+            view_cur.execute("SELECT Card_No, Name, LateFeeBalance FROM vBookLoanInfo WHERE (Card_No LIKE '______' AND Card_No LIKE ?) OR Name LIKE ?", ('%' + search_term + '%', '%' + search_term + '%'))
             res = view_cur.fetchall()
         else:
-            view_cur.execute("SELECT * FROM vBookLoanInfo ORDER BY LateFeeBalance DESC")
+            view_cur.execute("SELECT Card_No, Name, LateFeeBalance FROM vBookLoanInfo ORDER BY LateFeeBalance DESC")
             res = view_cur.fetchall()
 
         for item in tree.get_children():
             tree.delete(item)
 
         for row in res:
-            tree.insert('','end',values = row)
+            late_fee = row[2]
+            values = row[0:2] + (f'${late_fee:.2f}',)
+            tree.insert('','end',values = values)
+
+    update_tree_button = Button(select_view_window, text = 'Update Tree')
+    update_tree_button.pack(pady = 10)
+    update_tree_button.config(command = update_treeview)
+    select_view_window.mainloop()
+
+def bookloansview():
+    select_view_window = Toplevel(root)
+    select_view_window.title("Viewing Book Loans")
+    select_view_window.geometry("1280x720")
+
+    view_cur = LMS.cursor()
+    view_cur.execute("SELECT Title, Date_Out, Due_Date, Returned_date, LateFeeBalance FROM vBookLoanInfo")
+    res = view_cur.fetchall()
+
+    search_var = StringVar()
+    search_bar = Entry(select_view_window, textvariable = search_var, width = 50)
+    search_bar.pack()
+
+    tree = Treeview(select_view_window, height = 25)
+    tree['columns'] = ('Title', 'Date_Out', 'Due_Date', 'Returned_date', 'LateFeeBalance')
+    tree.heading('#0', text='')
+    tree.column('#0', width=50)
+    tree.heading('Title', text='Title')
+    tree.column('Title', width=150)
+    tree.heading('Date_Out', text='Date out')
+    tree.column('Date_Out', width=100)
+    tree.heading('Due_Date', text='Due date')
+    tree.column('Due_Date', width=120)
+    tree.heading('Returned_date', text='Returned date')
+    tree.column('Returned_date', width=120)
+    tree.heading('LateFeeBalance', text='Late Fee Balance')
+    tree.column('LateFeeBalance', width=120)
+    tree.pack()
+
+    for row in res:
+        late_fee = row[4]
+        values = row[0:4] + (f'${late_fee:.2f}',)
+        tree.insert('', 'end', values=values)
+    
+    tree.pack()
+
+
+    def update_treeview():
+        search_term = search_var.get()
+        if search_term:
+            view_cur.execute("SELECT Title, Date_Out, Due_Date, Returned_date, LateFeeBalance FROM vBookLoanInfo WHERE Title LIKE ?", ('%' + search_term + '%',))
+            res = view_cur.fetchall()
+        else:
+            view_cur.execute("SELECT Title, Date_Out, Due_Date, Returned_date, LateFeeBalance FROM vBookLoanInfo ORDER BY LateFeeBalance DESC")
+            res = view_cur.fetchall()
+
+        for item in tree.get_children():
+            tree.delete(item)
+
+        for row in res:
+            late_fee = row[4]
+            values = row[0:4] + (f'${late_fee:.2f}',)
+            tree.insert('','end',values = values)
 
     update_tree_button = Button(select_view_window, text = 'Update Tree')
     update_tree_button.pack(pady = 10)
@@ -323,7 +397,10 @@ get_copies_button.pack()
 list_late_copies_button = Button(root, text = 'List Late Copies', command = get_late_book_loans)
 list_late_copies_button.pack()
 
-select_view_button = Button(root, text = 'View Book Loans', command = select_view)
+select_view_button = Button(root, text = 'View Borrowers', command = select_view)
+select_view_button.pack()
+
+select_view_button = Button(root, text = 'View Book Loans', command = bookloansview)
 select_view_button.pack()
 
 root.mainloop()
